@@ -18,8 +18,11 @@ window.addEventListener("DOMContentLoaded", () => {
   const copyBtn = document.getElementById("copy-btn");
   let btnsActive = true;
   const canvas = document.getElementById("canvas");
+
+  // Initialisierungs-Größe des Canvas
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight * 0.1;
+
   const ctx = canvas.getContext("2d");
   const text_area = document.getElementById("output");
   const prefix = "0x";
@@ -49,10 +52,11 @@ window.addEventListener("DOMContentLoaded", () => {
 
     if (deltaTime >= 1000 / 3) {
       if (btnsActive) {
-        drawLabel(70, label[0]);
-        // drawLabel(70, `HEXA-GENERATOR | ${Math.round(1000 / deltaTime)} FPS`);
+        // FIX: Kein hartcodiertes "70" mehr übergeben!
+        drawLabel(label[0]);
       } else {
-        drawLabel(70, label[labelIndex]);
+        // FIX: Kein hartcodiertes "70" mehr übergeben!
+        drawLabel(label[labelIndex]);
         labelIndex += 1;
         if (labelIndex >= label.length) {
           labelIndex = 1;
@@ -66,25 +70,21 @@ window.addEventListener("DOMContentLoaded", () => {
   // GEN Button Event Listener
   genBtn.addEventListener("click", async () => {
     if (btnsActive) {
-      // text_area.value = "Generating Hex-Values ...";
+      if (amountInput.value > 150000 || digitsInput.value < 1) {
+        text_area.value =
+          "Amount must not be higher than 150.000 ! \nDigits must be at least 1 !";
+        return;
+      }
 
-      text_area.value = "* This may take a while for large amounts ! *";
-      // 1. Warten auf die performante Generierung
+      text_area.value = "* May take a while ! *";
       const generatedResult = await genHexValues(
         amountInput.value,
         digitsInput.value,
       );
 
-      // 2. Dem User sagen, dass der Browser jetzt das Riesenpaket rendert
-      text_area.value = "Inserting Hex-Values into Textarea ...";
-
-      // Genau einen Frame Pause einlegen, damit das Label gezeichnet werden kann
+      text_area.value = "Inserting Hex-Values...";
       await new Promise((resolve) => requestAnimationFrame(resolve));
-
-      // 3. Erst JETZT den gigantischen Text in die Textarea einfügen (erzeugt den kurzen Lag)
       text_area.value = generatedResult;
-
-      // 4. Erst wenn ALLES fertig ist, die Buttons wieder freigeben
       btnsActive = true;
     }
   });
@@ -96,9 +96,7 @@ window.addEventListener("DOMContentLoaded", () => {
       navigator.clipboard
         .writeText(text)
         .then(() => {
-          text_area.value !== ""
-            ? alert("Hex values copied to clipboard!")
-            : null;
+          text_area.value !== "" ? alert("Content copied to Clipboard!") : null;
         })
         .catch((err) => {
           console.error("Failed to copy ! ", err);
@@ -106,55 +104,71 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // FIX: Der Resize-Listener aktualisiert nur noch die Maße.
+  // Da die "program_loop" permanent läuft, zeichnet sie das Canvas im nächsten Frame automatisch neu!
   window.addEventListener("resize", () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight * 0.1;
-    drawLabel(70, label);
   });
 
-  function drawLabel(size, label) {
+  // FIX: Diese Funktion berechnet die Schriftgröße jetzt dynamisch selbst!
+  // JETZT PERFEKT RESPONSIV: Text füllt immer die volle Breite aus!
+  function drawLabel(textString) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.font = `${size}px Comic Sans Ms, sans-serif`;
-    ctx.fontWeight = "bold";
+
+    // 1. Gewünschten Abstand zum Rand definieren (z.B. insgesamt 40px -> 20px links und rechts)
+    const padding = 40;
+    const targetWidth = canvas.width - padding;
+
+    // 2. Eine Basis-Schriftgröße setzen, um die relative Breite des Textes zu messen
+    const baseFontSize = 100;
+    ctx.font = `bold ${baseFontSize}px "Comic Sans MS", sans-serif`;
+    const measuredWidth = ctx.measureText(textString).width;
+
+    // 3. Dreisatz: Berechne die exakte Schriftgröße für die volle Breite
+    let dynamicFontSize = (targetWidth / measuredWidth) * baseFontSize;
+
+    // 4. Sicherheitsnetz: Der Text soll natürlich nicht höher als das Canvas selbst werden
+    // (max. 85% der Canvas-Höhe, damit es oben/unten nicht anstößt)
+    const maxFontSize = canvas.height * 0.85;
+    if (dynamicFontSize > maxFontSize) {
+      dynamicFontSize = maxFontSize;
+    }
+
+    // 5. Die perfekt berechnete Größe anwenden und zeichnen
+    ctx.font = `bold ${dynamicFontSize}px "Comic Sans MS", sans-serif`;
     ctx.strokeStyle = "darkgoldenrod";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = dynamicFontSize > 30 ? 2 : 1; // Dünnere Linie auf kleinen Handys, damit es nicht matcht
     ctx.fillStyle = "darkgoldenrod";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.strokeText(label, canvas.width / 2, canvas.height / 1.6);
+
+    ctx.strokeText(textString, canvas.width / 2, canvas.height / 2);
   }
 
   async function genHexValues(amount, digits) {
     btnsActive = false;
     labelIndex = 1;
     const hexValues = [];
-
-    // 1. DAZUGEKOMMEN: digits sicher als Zahl parsen & den Byte-Puffer bereitstellen
     const numDigits = parseInt(digits);
     const randomBuffer = new Uint8Array(numDigits);
 
     for (let i = 0; i < amount; i++) {
-      // 2. DAZUGEKOMMEN: Puffer mit krypto-sicheren Zufallsbytes füllen
       window.crypto.getRandomValues(randomBuffer);
-
       let newHexValue = prefix;
 
       for (let j = 0; j < numDigits; j++) {
-        // 3. DAZUGEKOMMEN: Jedes Byte über Modulo (%) auf dein values-Alphabet mappen
         const randomIndex = randomBuffer[j] % values.length;
         newHexValue += values[randomIndex];
       }
 
       hexValues.push(newHexValue);
 
-      // ⚠️ i % Value bestimmt die Geschwindigkeit des Algorithmus. Je höher der Wert, desto schneller der Algo
+      // Hier behalten wir deinen Modulo-Wert für die Render-Pausen bei
       if (i % 50 === 0) {
-        // Perfekte FPS-Synchronisation über die Grafikkarte
         await new Promise((resolve) => requestAnimationFrame(resolve));
       }
     }
-
-    // ACHTUNG: btnsActive wird absichtlich erst im Click-Listener nach dem Textarea-Load wieder true!
     return hexValues.join("\n");
   }
 });

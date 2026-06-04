@@ -8,12 +8,14 @@
   </head>
   <body>
     <canvas id="canvas"></canvas>
+
     <textarea
       id="output"
       aria-label="OUTPUT"
       title="Hex-Values Output"
       readonly
       placeholder="Generate Hex Values with the Button below !"></textarea>
+
     <div class="input-container">
       <input
         type="number"
@@ -26,8 +28,12 @@
         title="Digits per Hex Value"
         placeholder="Digits per Hex Value ?" />
     </div>
-    <button id="gen-btn">Generate</button>
-    <button id="copy-btn">Copy</button>
+
+    <div class="button-container">
+      <button id="gen-btn">Generate</button>
+      <button id="copy-btn">Copy</button>
+    </div>
+
     <script src="gen_hex_values.js"></script>
   </body>
 </html>

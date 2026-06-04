@@ -2,130 +2,142 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  /* overflow: hidden; */
 }
 
 body {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 25px;
+  justify-content: space-between;
   align-items: center;
+  gap: 20px;
   overflow: hidden;
   background-color: #121212;
-  height: 100%;
+  height: 80vh;
+  padding-bottom: 3vh;
   font-family:
     "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
     "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
 }
+
 #canvas {
   display: inline-block;
   width: 100vw;
   height: 10vh;
   background-color: #222222;
-  margin-top: 3vh;
 }
+
+/* --- TEXTAREA: Der optische Master-Anker --- */
 #output {
-  width: 30vw;
-  height: 50vh;
+  width: 90vw;
+  max-width: 700px; /* Begrenzt die Breite auf dem PC auf ein edles Maß */
+  flex-grow: 1; /* Saugt dynamisch die restliche Höhe auf */
   background-color: #333333;
   color: #dddd04;
   text-align: center;
   font-family: monospace;
-  font-size: 25px;
+  font-size: 24px;
   font-weight: bold;
   line-height: 125%;
   letter-spacing: 0.1rem;
-  padding: 10px;
+  padding: 15px;
   border-radius: 10px;
   border: none;
   outline: none;
   box-shadow: 0 0 30px rgba(243, 138, 11, 0.919);
 
-  /* --- HIER SIND DIE ÄNDERUNGEN --- */
-  overflow-y: auto; /* Erlaubt vertikales Scrollen im Hintergrund */
-  overflow-x: auto; /* Verhindert horizontales Wackeln */
-  scrollbar-width: none; /* Versteckt die Scrollbar in Firefox und modernen Standards */
-  -ms-overflow-style: none; /* Versteckt die Scrollbar im alten Internet Explorer/Edge */
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-.input-container {
+
+/* --- BEIDE CONTAINER: Teilen sich die exakt gleichen Layout-Regeln --- */
+.input-container,
+.button-container {
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
+  width: 90vw;
+  max-width: 700px; /* Exakt dieselbe maximale Breite wie die Textarea! */
 }
-#digits-input {
-  width: 10vw;
-  height: 5vh;
-  background-color: #252525;
-  color: #505050;
-  padding: 3px;
-  font-size: 1.3rem;
-  caret-color: #dddd04;
-  border: none;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(243, 138, 11, 0.919);
-}
-#amount-input {
-  width: 10vw;
-  height: 5vh;
-  background-color: #252525;
-  color: #505050;
-  padding: 3px;
-  font-size: 1.3rem;
-  caret-color: #dddd04;
-  border: none;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(243, 138, 11, 0.919);
-}
-#gen-btn {
-  width: 10vw;
-  height: 5vh;
-  padding: 5px;
-  background-color: #333333;
-  color: #848484;
-  font-size: 1.3rem;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  box-shadow: 0 0 10px rgba(243, 138, 11, 0.919);
-}
-#gen-btn:hover {
-  font-size: 1.33rem;
-  background-color: #454545;
-  color: yellowgreen;
-}
+
+/* --- STEUERELEMENTE: Alle teilen sich die perfekte, feste Klick-Form --- */
+#digits-input,
+#amount-input,
+#gen-btn,
 #copy-btn {
-  width: 10vw;
-  height: 5vh;
+  flex: 1; /* Teilt die Zeile mathematisch perfekt in 50/50 auf */
+  min-width: 0; /* 🔥 DIE RETTUNG: Zwingt vor allem Inputs dazu, sich der Container-Breite anzupassen! */
+  height: 48px; /* Feste, ergonomische Höhe auf dem PC */
+  background-color: #252525;
+  color: #dddd04;
   padding: 5px;
-  background-color: #333333;
-  color: #848484;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   border: none;
   border-radius: 5px;
-  cursor: pointer;
   box-shadow: 0 0 10px rgba(243, 138, 11, 0.919);
+  text-align: center;
 }
+
+#gen-btn,
+#copy-btn {
+  background-color: #333333;
+  color: #848484;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+#gen-btn:hover,
 #copy-btn:hover {
-  font-size: 1.33rem;
+  font-size: 1.25rem;
   background-color: #454545;
   color: yellowgreen;
 }
 
-/* Für Chrome, Safari, Edge und Opera (WebKit-Browser) */
+/* ==========================================================================
+  ⚡ DER MOBILE BREAKPOINT (Skaliert nahtlos auf Smartphones hinunter)
+  ==========================================================================
+*/
+@media (max-width: 600px) {
+  body {
+    padding-bottom: 10vh;
+    gap: 15px;
+  }
+
+  #output {
+    width: 94vw;
+    font-size: 18px;
+  }
+
+  .input-container,
+  .button-container {
+    width: 90vw; /* Nutzt auf dem Handy den Platz optimal aus */
+    gap: 15px;
+  }
+
+  #digits-input,
+  #amount-input,
+  #gen-btn,
+  #copy-btn {
+    height: 50px; /* Etwas größere Touch-Fläche für mobile Daumen */
+    font-size: 1rem;
+  }
+}
+
+/* --- Browser-Spezifische Overrides --- */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-/* Versteckt die Scrollbar in Chrome, Safari und allen Chromium-Browsern (Edge, Opera, etc.) */
 #output::-webkit-scrollbar {
   display: none;
 }
 
-/* Für Firefox */
 input[type="number"] {
   -moz-appearance: textfield;
 }
