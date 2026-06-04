@@ -128,25 +128,27 @@ window.addEventListener("DOMContentLoaded", () => {
     btnsActive = false;
     labelIndex = 1;
     const hexValues = [];
-    const hexValuesSet = new Set();
+
+    // 1. DAZUGEKOMMEN: digits sicher als Zahl parsen & den Byte-Puffer bereitstellen
+    const numDigits = parseInt(digits);
+    const randomBuffer = new Uint8Array(numDigits);
 
     for (let i = 0; i < amount; i++) {
-      let newHexValue;
-      let isDuplicate;
+      // 2. DAZUGEKOMMEN: Puffer mit krypto-sicheren Zufallsbytes füllen
+      window.crypto.getRandomValues(randomBuffer);
 
-      do {
-        newHexValue = prefix;
-        for (let j = 0; j < digits; j++) {
-          const randomIndex = Math.floor(Math.random() * values.length);
-          newHexValue += values[randomIndex];
-        }
-        isDuplicate = hexValuesSet.has(newHexValue);
-      } while (isDuplicate);
+      // Das 'do-while' und die Duplikat-Variablen sind komplett weggefallen!
+      let newHexValue = prefix;
+
+      for (let j = 0; j < numDigits; j++) {
+        // 3. DAZUGEKOMMEN: Jedes Byte über Modulo (%) auf dein values-Alphabet mappen
+        const randomIndex = randomBuffer[j] % values.length;
+        newHexValue += values[randomIndex];
+      }
 
       hexValues.push(newHexValue);
-      hexValuesSet.add(newHexValue);
 
-      // Alle X Werte dem Browser Raum zum Atmen geben
+      // ⚠️ i % Value bestimmt die Geschwindigkeit des Algorithmus. Je höher der Wert, desto schneller der Algo
       if (i % 50 === 0) {
         // Perfekte FPS-Synchronisation über die Grafikkarte
         await new Promise((resolve) => requestAnimationFrame(resolve));
