@@ -137,7 +137,6 @@ window.addEventListener("DOMContentLoaded", () => {
       // 2. DAZUGEKOMMEN: Puffer mit krypto-sicheren Zufallsbytes füllen
       window.crypto.getRandomValues(randomBuffer);
 
-      // Das 'do-while' und die Duplikat-Variablen sind komplett weggefallen!
       let newHexValue = prefix;
 
       for (let j = 0; j < numDigits; j++) {
