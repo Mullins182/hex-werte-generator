@@ -4,7 +4,14 @@ console.log("gen_hex_values.js successfully loaded ...");
 
 window.addEventListener("DOMContentLoaded", () => {
   console.log("DOM fully loaded and parsed");
-  const label = ["HEXA-GENERATOR"];
+  let label = [
+    "HEXA-GENERATOR",
+    "GENERATING HEX VALUES ",
+    " GENERATING HEX VALUES .",
+    "  GENERATING HEX VALUES ..",
+    "   GENERATING HEX VALUES ...",
+  ];
+  let labelIndex = 1;
   const amountInput = document.getElementById("amount-input");
   const digitsInput = document.getElementById("digits-input");
   const genBtn = document.getElementById("gen-btn");
@@ -35,17 +42,53 @@ window.addEventListener("DOMContentLoaded", () => {
     "F",
   ];
 
-  // -------------- TOP LEVEL CODE -----------------
-  // amountInput.value = amountInput.value <= 0 ? 10 : amountInput.value;
-  // digitsInput.value = digitsInput.value <= 0 ? 6 : digitsInput.value;
-  drawLabel(70, label);
+  requestAnimationFrame(program_loop);
+
+  async function program_loop(timestamp) {
+    const deltaTime = timestamp - (program_loop.lastTimestamp || 0);
+
+    if (deltaTime >= 1000 / 3) {
+      if (btnsActive) {
+        drawLabel(70, label[0]);
+        // drawLabel(70, `HEXA-GENERATOR | ${Math.round(1000 / deltaTime)} FPS`);
+      } else {
+        drawLabel(70, label[labelIndex]);
+        labelIndex += 1;
+        if (labelIndex >= label.length) {
+          labelIndex = 1;
+        }
+      }
+      program_loop.lastTimestamp = timestamp;
+    }
+    requestAnimationFrame(program_loop);
+  }
 
   // GEN Button Event Listener
-  genBtn.addEventListener("click", () => {
+  genBtn.addEventListener("click", async () => {
     if (btnsActive) {
-      text_area.value = genHexValues(amountInput.value, digitsInput.value);
+      // text_area.value = "Generating Hex-Values ...";
+
+      text_area.value = "* This may take a while for large amounts ! *";
+      // 1. Warten auf die performante Generierung
+      const generatedResult = await genHexValues(
+        amountInput.value,
+        digitsInput.value,
+      );
+
+      // 2. Dem User sagen, dass der Browser jetzt das Riesenpaket rendert
+      text_area.value = "Inserting Hex-Values into Textarea ...";
+
+      // Genau einen Frame Pause einlegen, damit das Label gezeichnet werden kann
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      // 3. Erst JETZT den gigantischen Text in die Textarea einfügen (erzeugt den kurzen Lag)
+      text_area.value = generatedResult;
+
+      // 4. Erst wenn ALLES fertig ist, die Buttons wieder freigeben
+      btnsActive = true;
     }
   });
+
   // Copy Button Event Listener
   copyBtn.addEventListener("click", () => {
     if (btnsActive) {
@@ -62,6 +105,7 @@ window.addEventListener("DOMContentLoaded", () => {
         });
     }
   });
+
   window.addEventListener("resize", () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight * 0.1;
@@ -78,11 +122,11 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.strokeText(label, canvas.width / 2, canvas.height / 1.6);
-    // ctx.fillText(label, canvas.width / 2, canvas.height / 1.6);
   }
 
-  function genHexValues(amount, digits) {
+  async function genHexValues(amount, digits) {
     btnsActive = false;
+    labelIndex = 1;
     const hexValues = [];
     const hexValuesSet = new Set();
 
@@ -91,52 +135,55 @@ window.addEventListener("DOMContentLoaded", () => {
       let isDuplicate;
 
       do {
-        let row = [prefix];
+        newHexValue = prefix;
         for (let j = 0; j < digits; j++) {
           const randomIndex = Math.floor(Math.random() * values.length);
-          row.push(values[randomIndex]);
+          newHexValue += values[randomIndex];
         }
-        newHexValue = row.join("");
         isDuplicate = hexValuesSet.has(newHexValue);
       } while (isDuplicate);
 
       hexValues.push(newHexValue);
       hexValuesSet.add(newHexValue);
+
+      // Alle X Werte dem Browser Raum zum Atmen geben
+      if (i % 50 === 0) {
+        // Perfekte FPS-Synchronisation über die Grafikkarte
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
     }
 
-    btnsActive = true;
+    // ACHTUNG: btnsActive wird absichtlich erst im Click-Listener nach dem Textarea-Load wieder true!
     return hexValues.join("\n");
   }
-
-  // ----------------- HEXAGONS -----------------
-
-  // const canvas = document.getElementById("canvas");
-  // const ctx = canvas.getContext("2d");
-
-  // function drawHexagon(x, y, size) {
-  //   ctx.beginPath();
-  //   for (let i = 0; i < 6; i++) {
-  //     const angle = (Math.PI / 3) * i;
-  //     const xOffset = size * Math.cos(angle);
-  //     const yOffset = size * Math.sin(angle);
-  //     ctx.lineTo(x + xOffset, y + yOffset);
-  //   }
-  //   ctx.closePath();
-  //   ctx.stroke();
-  // }
-
-  // function generateHexagons(rows, cols, size) {
-  //   for (let row = 0; row < rows; row++) {
-  //     for (let col = 0; col < cols; col++) {
-  //       const x = col * size * 1.5;
-  //       const y = row * size * Math.sqrt(3);
-  //       if (col % 2 === 1) {
-  //         y += (size * Math.sqrt(3)) / 2;
-  //       }
-  //       drawHexagon(x, y, size);
-  //     }
-  //   }
-  // }
-
-  // generateHexagons(50, 50, 500);
 });
+// ----------------- HEXAGONS -----------------
+// const canvas = document.getElementById("canvas");
+// const ctx = canvas.getContext("2d");
+
+// function drawHexagon(x, y, size) {
+//   ctx.beginPath();
+//   for (let i = 0; i < 6; i++) {
+//     const angle = (Math.PI / 3) * i;
+//     const xOffset = size * Math.cos(angle);
+//     const yOffset = size * Math.sin(angle);
+//     ctx.lineTo(x + xOffset, y + yOffset);
+//   }
+//   ctx.closePath();
+//   ctx.stroke();
+// }
+
+// function generateHexagons(rows, cols, size) {
+//   for (let row = 0; row < rows; row++) {
+//     for (let col = 0; col < cols; col++) {
+//       const x = col * size * 1.5;
+//       const y = row * size * Math.sqrt(3);
+//       if (col % 2 === 1) {
+//         y += (size * Math.sqrt(3)) / 2;
+//       }
+//       drawHexagon(x, y, size);
+//     }
+//   }
+// }
+
+// generateHexagons(50, 50, 500);

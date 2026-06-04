@@ -35,12 +35,17 @@ body {
   font-weight: bold;
   line-height: 125%;
   letter-spacing: 0.1rem;
-  overflow-y: auto;
   padding: 10px;
   border-radius: 10px;
   border: none;
   outline: none;
   box-shadow: 0 0 30px rgba(243, 138, 11, 0.919);
+
+  /* --- HIER SIND DIE ÄNDERUNGEN --- */
+  overflow-y: auto; /* Erlaubt vertikales Scrollen im Hintergrund */
+  overflow-x: auto; /* Verhindert horizontales Wackeln */
+  scrollbar-width: none; /* Versteckt die Scrollbar in Firefox und modernen Standards */
+  -ms-overflow-style: none; /* Versteckt die Scrollbar im alten Internet Explorer/Edge */
 }
 .input-container {
   display: flex;
@@ -113,6 +118,11 @@ input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+/* Versteckt die Scrollbar in Chrome, Safari und allen Chromium-Browsern (Edge, Opera, etc.) */
+#output::-webkit-scrollbar {
+  display: none;
 }
 
 /* Für Firefox */
